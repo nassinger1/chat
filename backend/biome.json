@@ -1,0 +1,77 @@
+{
+  "files": {
+    "includes": [
+      "**",
+      "!!**/dist"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    },
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "complexity": {
+        "noStaticOnlyClass": "off"
+      },
+      "recommended": true,
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "@nestjs/mongoose": "Only the repository talks to Mongo.",
+              "mongodb": "Only the repository talks to Mongo.",
+              "mongoose": "Only the repository talks to Mongo."
+            },
+            "patterns": [
+              {
+                "group": [
+                  "**/*.schema.js"
+                ],
+                "message": "Use the domain type."
+              }
+            ]
+          }
+        },
+        "useImportType": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "**/repositories/**",
+        "**/*.schema.ts",
+        "**/*.module.ts",
+        "**/common/schema/**",
+        "**/common/filters/**",
+        "**/common/pipes/**",
+        "**/common/decorators/**",
+        "**/health/**",
+        "**/*.spec.ts",
+        "test/**",
+        "src/app.module.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
+          }
+        }
+      }
+    }
+  ],
+  "vcs": {
+    "enabled": false
+  }
+}

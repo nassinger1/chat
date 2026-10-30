@@ -1,0 +1,27 @@
+services:
+  mongo:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  nats:
+    image: nats:2-alpine
+    command: -c /etc/nats/nats.conf
+    ports:
+      - "4222:4222"
+      - "8080:8080"
+      - "8222:8222"
+    volumes:
+      - ./infra/nats/nats.conf:/etc/nats/nats.conf:ro
+      - nats-data:/data
+
+volumes:
+  mongo-data:
+  nats-data:

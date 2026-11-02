@@ -13,6 +13,7 @@ import { validateAppConfig } from "./config/app-config-validation.js";
 import { ConversationsModule } from "./conversations/conversations.module.js";
 import { globalProviders } from "./global-providers.js";
 import { HealthModule } from "./health/health.module.js";
+import { MessagesModule } from "./messages/messages.module.js";
 import { AuthenticationModule } from "./security/authentication/authentication.module.js";
 import { SessionModule } from "./security/session/session.module.js";
 import { UsersModule } from "./users/users.module.js";
@@ -47,6 +48,7 @@ const THROTTLED_ENVIRONMENTS: string[] = [
     HealthModule,
     UsersModule,
     ConversationsModule,
+    MessagesModule,
   ],
   providers: globalProviders,
 })

@@ -1,7 +1,7 @@
+﻿import { mkdirSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { encodeAccount, encodeOperator, encodeUser } from "@nats-io/jwt";
 import { createAccount, createOperator, createUser } from "@nats-io/nkeys";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
 
 const unlimitedAccount = {
   limits: {
@@ -17,8 +17,8 @@ const unlimitedAccount = {
     disk_storage: -1,
     streams: -1,
     consumer: -1,
-    max_ack_pending: -1
-  }
+    max_ack_pending: -1,
+  },
 };
 
 const operator = createOperator();
@@ -27,22 +27,22 @@ const chatAccount = createAccount();
 const backendUser = createUser();
 
 const operatorJwt = await encodeOperator("chat", operator, {
-  system_account: systemAccount.getPublicKey()
+  system_account: systemAccount.getPublicKey(),
 });
 const systemJwt = await encodeAccount(
   "SYS",
   systemAccount,
   {},
-  { signer: operator }
+  { signer: operator },
 );
 const chatJwt = await encodeAccount("CHAT", chatAccount, unlimitedAccount, {
-  signer: operator
+  signer: operator,
 });
 const backendJwt = await encodeUser(
   "chat-backend",
   backendUser,
   chatAccount,
-  {}
+  {},
 );
 
 const natsConfig = `
@@ -68,7 +68,8 @@ const outputDir = resolve(import.meta.dirname, "../../infra/nats");
 mkdirSync(outputDir, { recursive: true });
 writeFileSync(resolve(outputDir, "nats.conf"), natsConfig);
 
-const seedOf = (key) => new TextDecoder().decode(key.getSeed());
+const seedOf = (key: { getSeed(): Uint8Array }) =>
+  new TextDecoder().decode(key.getSeed());
 
 console.log(`NATS_USER_JWT=${backendJwt}`);
 console.log(`NATS_USER_SEED=${seedOf(backendUser)}`);

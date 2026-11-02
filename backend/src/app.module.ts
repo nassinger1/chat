@@ -11,6 +11,7 @@ import {
 } from "./config/app-config.js";
 import { validateAppConfig } from "./config/app-config-validation.js";
 import { ConversationsModule } from "./conversations/conversations.module.js";
+import { EventsModule } from "./events/events.module.js";
 import { globalProviders } from "./global-providers.js";
 import { HealthModule } from "./health/health.module.js";
 import { MessagesModule } from "./messages/messages.module.js";
@@ -43,6 +44,7 @@ const THROTTLED_ENVIRONMENTS: string[] = [
     }),
     LoggerModule,
     BrokerModule,
+    EventsModule,
     SessionModule,
     AuthenticationModule,
     HealthModule,

@@ -9,8 +9,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": dir("./src"),
-      "@test": dir("./test")
-    }
+      "@test": dir("./test"),
+    },
   },
   test: {
     globals: true,
@@ -18,6 +18,6 @@ export default defineConfig({
     globalSetup: ["./test/global-setup.ts"],
     pool: "forks",
     testTimeout: 60_000,
-    hookTimeout: 60_000
-  }
+    hookTimeout: 60_000,
+  },
 });

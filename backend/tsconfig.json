@@ -10,12 +10,8 @@
     "moduleResolution": "nodenext",
     "outDir": "./dist",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@test/*": [
-        "./test/*"
-      ]
+      "@/*": ["./src/*"],
+      "@test/*": ["./test/*"]
     },
     "removeComments": true,
     "resolvePackageJsonExports": true,
@@ -24,10 +20,7 @@
     "strict": true,
     "strictPropertyInitialization": false,
     "target": "ES2023",
-    "types": [
-      "vitest/globals",
-      "node"
-    ],
+    "types": ["vitest/globals", "node"],
     "useDefineForClassFields": false,
     "verbatimModuleSyntax": true
   }

@@ -1,9 +1,6 @@
 {
   "files": {
-    "includes": [
-      "**",
-      "!!**/dist"
-    ]
+    "includes": ["**", "!!**/dist"]
   },
   "formatter": {
     "enabled": true,
@@ -35,9 +32,7 @@
             },
             "patterns": [
               {
-                "group": [
-                  "**/*.schema.js"
-                ],
+                "group": ["**/*.schema.js"],
                 "message": "Use the domain type."
               }
             ]

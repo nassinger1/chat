@@ -6,6 +6,7 @@ import { LoggerModule } from "./common/logger/logger.module.js";
 import { type AppConfig, appConfig } from "./config/app-config.js";
 import { validateAppConfig } from "./config/app-config-validation.js";
 import { globalProviders } from "./global-providers.js";
+import { HealthModule } from "./health/health.module.js";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { globalProviders } from "./global-providers.js";
     }),
     LoggerModule,
     BrokerModule,
+    HealthModule,
   ],
   providers: globalProviders,
 })

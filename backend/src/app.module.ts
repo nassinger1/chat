@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
+import { BrokerModule } from "./broker/broker.module.js";
 import { LoggerModule } from "./common/logger/logger.module.js";
 import { type AppConfig, appConfig } from "./config/app-config.js";
 import { validateAppConfig } from "./config/app-config-validation.js";
@@ -21,6 +22,7 @@ import { globalProviders } from "./global-providers.js";
       }),
     }),
     LoggerModule,
+    BrokerModule,
   ],
   providers: globalProviders,
 })

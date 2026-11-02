@@ -12,4 +12,6 @@ const configService = app.get<ConfigService<AppConfig, true>>(ConfigService);
 
 setupApp(app);
 
+await app.startAllMicroservices();
+app.enableShutdownHooks();
 await app.listen(configService.get("port", { infer: true }));

@@ -1,4 +1,5 @@
 import type { ConversationRepository } from "@/conversations/repositories/conversation.repository.js";
+import type { EventPublisher } from "@/events/event-publisher.service.js";
 import type { MessageRepository } from "../repositories/message.repository.js";
 import { SendMessageHandler } from "./send-message.handler.js";
 
@@ -8,22 +9,30 @@ describe("SendMessageHandler", () => {
     recordMessage: vi.fn(),
   };
   const messageRepository = { create: vi.fn() };
+  const eventPublisher = { enqueue: vi.fn() };
   const handler = new SendMessageHandler(
     conversationRepository as unknown as ConversationRepository,
     messageRepository as unknown as MessageRepository,
+    eventPublisher as unknown as EventPublisher,
   );
   const command = { conversationId: "1", senderId: "2", text: "Hi" };
 
   beforeEach(() => vi.clearAllMocks());
 
-  it("saves the message for a participant", async () => {
-    const message = { id: "3", createdAt: new Date() };
-
+  it("saves first, then enqueues", async () => {
     conversationRepository.getByIdForParticipant.mockResolvedValue({ id: "1" });
-    messageRepository.create.mockResolvedValue(message);
+    messageRepository.create.mockResolvedValue({
+      id: "3",
+      ...command,
+      createdAt: new Date(),
+    });
 
-    await expect(handler.execute(command)).resolves.toBe(message);
-    expect(conversationRepository.recordMessage).toHaveBeenCalledOnce();
+    await handler.execute(command);
+
+    const [saved] = messageRepository.create.mock.invocationCallOrder;
+    const [enqueued] = eventPublisher.enqueue.mock.invocationCallOrder;
+
+    expect(saved).toBeLessThan(enqueued);
   });
 
   it("gives CNV-001 to a stranger and saves nothing", async () => {
@@ -33,5 +42,6 @@ describe("SendMessageHandler", () => {
       response: { code: "CNV-001" },
     });
     expect(messageRepository.create).not.toHaveBeenCalled();
+    expect(eventPublisher.enqueue).not.toHaveBeenCalled();
   });
 });

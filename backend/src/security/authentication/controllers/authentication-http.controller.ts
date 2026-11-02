@@ -19,11 +19,13 @@ import { LoginReqDto } from "../dtos/login-req.dto.js";
 import { toSessionResDto } from "../dtos/session-res.dto.js";
 import { IssueBrokerCredentialsHandler } from "../handlers/issue-broker-credentials.handler.js";
 import { LoginHandler } from "../handlers/login.handler.js";
+import { LogoutHandler } from "../handlers/logout.handler.js";
 
 @Controller("auth")
 export class AuthenticationHttpController {
   constructor(
     private readonly loginHandler: LoginHandler,
+    private readonly logoutHandler: LogoutHandler,
     private readonly issueBrokerCredentialsHandler: IssueBrokerCredentialsHandler,
     private readonly sessionService: SessionService,
   ) {}
@@ -61,8 +63,12 @@ export class AuthenticationHttpController {
   @RespondWith(toSessionResDto)
   @HttpCode(200)
   @Post("logout")
-  logout(@Req() req: Request) {
-    return this.sessionService.destroy(req);
+  async logout(
+    @Req() req: Request,
+    @GetAuthenticatedContext() { userId }: AuthenticatedContext,
+  ) {
+    await this.logoutHandler.execute(userId);
+    await this.sessionService.destroy(req);
   }
 
   @RespondWith(toBrokerCredentialsResDto)

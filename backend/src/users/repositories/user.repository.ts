@@ -6,10 +6,11 @@ import { type PageOptions, toPaginatedResult } from "@/common/pagination.js";
 import { isDuplicateKeyError } from "@/common/utils.js";
 import { UserErrors } from "../user.errors.js";
 import { UserDocument } from "../user.schema.js";
-import type {
-  CreateUserInput,
-  User,
-  UserWithPassword,
+import {
+  type CreateUserInput,
+  type User,
+  UserStatus,
+  type UserWithPassword,
 } from "../users.types.js";
 import { toUser } from "./user.mapper.js";
 
@@ -76,5 +77,35 @@ export class UserRepository {
     ]);
 
     return toPaginatedResult(documents.map(toUser), itemCount, options);
+  }
+
+  async markOnline(id: string): Promise<boolean> {
+    const previous = await this.userModel
+      .findByIdAndUpdate(id, {
+        $set: { status: UserStatus.ONLINE, lastSeenAt: new Date() },
+      })
+      .lean<UserDocument>();
+
+    return previous?.status === UserStatus.OFFLINE;
+  }
+
+  async markOffline(id: string): Promise<User | null> {
+    const document = await this.userModel
+      .findOneAndUpdate(
+        { _id: id, status: UserStatus.ONLINE },
+        { $set: { status: UserStatus.OFFLINE } },
+        { returnDocument: "after" },
+      )
+      .lean<UserDocument>();
+
+    return document ? toUser(document) : null;
+  }
+
+  async findStaleOnline(before: Date): Promise<User[]> {
+    const documents = await this.userModel
+      .find({ status: UserStatus.ONLINE, lastSeenAt: { $lt: before } })
+      .lean<UserDocument[]>();
+
+    return documents.map(toUser);
   }
 }

@@ -1,3 +1,4 @@
+import type { PresenceService } from "@/presence/services/presence.service.js";
 import type { HashingService } from "@/security/hashing/hashing.service.js";
 import type { UserRepository } from "@/users/repositories/user.repository.js";
 import { LoginHandler } from "./login.handler.js";
@@ -5,9 +6,11 @@ import { LoginHandler } from "./login.handler.js";
 describe("LoginHandler", () => {
   const userRepository = { getByEmailWithPassword: vi.fn() };
   const hashingService = { compare: vi.fn() };
+  const presenceService = { markOnline: vi.fn() };
   const handler = new LoginHandler(
     userRepository as unknown as UserRepository,
     hashingService as unknown as HashingService,
+    presenceService as unknown as PresenceService,
   );
   const command = { email: "ana@test.com", password: "password123" };
   const user = {
@@ -19,7 +22,7 @@ describe("LoginHandler", () => {
 
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns the context for the right password", async () => {
+  it("marks the user online on the right password", async () => {
     userRepository.getByEmailWithPassword.mockResolvedValue(user);
     hashingService.compare.mockResolvedValue(true);
 
@@ -28,6 +31,7 @@ describe("LoginHandler", () => {
       userName: "Ana",
       userEmail: "ana@test.com",
     });
+    expect(presenceService.markOnline).toHaveBeenCalledWith("1");
   });
 
   it("gives IAM-001 for a wrong password", async () => {
@@ -37,6 +41,7 @@ describe("LoginHandler", () => {
     await expect(handler.execute(command)).rejects.toMatchObject({
       response: { code: "IAM-001" },
     });
+    expect(presenceService.markOnline).not.toHaveBeenCalled();
   });
 
   it("gives IAM-001 for an unknown email, after comparing", async () => {

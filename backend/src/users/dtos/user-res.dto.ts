@@ -1,3 +1,4 @@
+import type { PaginatedResult } from "@/common/interfaces/paginated-result.interface.js";
 import type { User, UserStatus } from "../users.types.js";
 
 export type UserResDto = {
@@ -16,4 +17,8 @@ export function toUserResDto(user: User): UserResDto {
     status: user.status,
     lastSeenAt: user.lastSeenAt,
   };
+}
+
+export function toUserListResDto(result: PaginatedResult<User>) {
+  return { items: result.items.map(toUserResDto), meta: result.meta };
 }

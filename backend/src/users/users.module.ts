@@ -3,6 +3,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { HashingModule } from "@/security/hashing/hashing.module.js";
 import { UsersHttpController } from "./controllers/users-http.controller.js";
 import { CreateUserHandler } from "./handlers/create-user.handler.js";
+import { FindUsersHandler } from "./handlers/find-users.handler.js";
 import { UserRepository } from "./repositories/user.repository.js";
 import { UserDocument, UserSchema } from "./user.schema.js";
 
@@ -14,7 +15,7 @@ import { UserDocument, UserSchema } from "./user.schema.js";
     ]),
   ],
   controllers: [UsersHttpController],
-  providers: [UserRepository, CreateUserHandler],
+  providers: [UserRepository, CreateUserHandler, FindUsersHandler],
   exports: [UserRepository],
 })
 export class UsersModule {}

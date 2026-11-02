@@ -4,6 +4,7 @@ import session from "express-session";
 import { AppModule } from "@/app.module.js";
 import { NATS_CONNECTION } from "@/broker/broker.types.js";
 import { BrokerClientService } from "@/broker/broker-client.service.js";
+import { BrokerCredentialsService } from "@/broker/broker-credentials.service.js";
 import { RedisClientService } from "@/security/session/services/redis-client.service.js";
 import { SessionStoreService } from "@/security/session/services/session-store.service.js";
 import { setupApp } from "@/setup-app.js";
@@ -17,6 +18,8 @@ export async function bootstrapE2eApp(mongoUri: string) {
     .useValue({ isClosed: () => false, isDraining: () => false })
     .overrideProvider(BrokerClientService)
     .useValue(createBrokerClientMock())
+    .overrideProvider(BrokerCredentialsService)
+    .useValue({ mintSubscribeOnly: vi.fn() })
     .overrideProvider(RedisClientService)
     .useValue({ getClient: vi.fn() })
     .overrideProvider(SessionStoreService)

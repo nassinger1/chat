@@ -11,15 +11,20 @@ import { ThrottlerGuard } from "@nestjs/throttler";
 import type { Request } from "express";
 import { RespondWith } from "@/common/decorators/respond-with.decorator.js";
 import { SessionService } from "@/security/session/services/session.service.js";
+import type { AuthenticatedContext } from "../authentication.types.js";
+import { GetAuthenticatedContext } from "../decorators/get-authenticated-context.decorator.js";
 import { SkipAuthentication } from "../decorators/skip-authentication.decorator.js";
+import { toBrokerCredentialsResDto } from "../dtos/broker-credentials-res.dto.js";
 import { LoginReqDto } from "../dtos/login-req.dto.js";
 import { toSessionResDto } from "../dtos/session-res.dto.js";
+import { IssueBrokerCredentialsHandler } from "../handlers/issue-broker-credentials.handler.js";
 import { LoginHandler } from "../handlers/login.handler.js";
 
 @Controller("auth")
 export class AuthenticationHttpController {
   constructor(
     private readonly loginHandler: LoginHandler,
+    private readonly issueBrokerCredentialsHandler: IssueBrokerCredentialsHandler,
     private readonly sessionService: SessionService,
   ) {}
 
@@ -58,5 +63,14 @@ export class AuthenticationHttpController {
   @Post("logout")
   logout(@Req() req: Request) {
     return this.sessionService.destroy(req);
+  }
+
+  @RespondWith(toBrokerCredentialsResDto)
+  @HttpCode(200)
+  @Post("broker-credentials")
+  issueBrokerCredentials(
+    @GetAuthenticatedContext() authenticatedContext: AuthenticatedContext,
+  ) {
+    return this.issueBrokerCredentialsHandler.execute(authenticatedContext);
   }
 }

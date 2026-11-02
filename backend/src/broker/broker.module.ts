@@ -5,6 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import { type AppConfig, AppEnvironment } from "@/config/app-config.js";
 import { NATS_CONNECTION } from "./broker.types.js";
 import { BrokerClientService } from "./broker-client.service.js";
+import { BrokerCredentialsService } from "./broker-credentials.service.js";
 import { BrokerStreamConsumerService } from "./broker-stream-consumer.service.js";
 
 const brokerConnectionProvider = {
@@ -32,11 +33,13 @@ const brokerConnectionProvider = {
   providers: [
     brokerConnectionProvider,
     BrokerClientService,
+    BrokerCredentialsService,
     BrokerStreamConsumerService,
   ],
   exports: [
     brokerConnectionProvider,
     BrokerClientService,
+    BrokerCredentialsService,
     BrokerStreamConsumerService,
   ],
 })

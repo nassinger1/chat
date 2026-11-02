@@ -1,16 +1,20 @@
+import type { EventPublisher } from "@/events/event-publisher.service.js";
 import type { HashingService } from "@/security/hashing/hashing.service.js";
 import type { UserRepository } from "../repositories/user.repository.js";
 import { CreateUserHandler } from "./create-user.handler.js";
 
 describe("CreateUserHandler", () => {
-  it("saves the hash, not the password", async () => {
-    const userRepository = { create: vi.fn() };
-    const hashingService = { hash: vi.fn().mockResolvedValue("stored-hash") };
-    const handler = new CreateUserHandler(
-      userRepository as unknown as UserRepository,
-      hashingService as unknown as HashingService,
-    );
+  const user = { id: "1", name: "Ana", email: "ana@test.com" };
+  const userRepository = { create: vi.fn().mockResolvedValue(user) };
+  const hashingService = { hash: vi.fn().mockResolvedValue("stored-hash") };
+  const eventPublisher = { toEveryone: vi.fn() };
+  const handler = new CreateUserHandler(
+    userRepository as unknown as UserRepository,
+    hashingService as unknown as HashingService,
+    eventPublisher as unknown as EventPublisher,
+  );
 
+  it("saves the hash and tells everyone", async () => {
     await handler.execute({
       name: "Ana",
       email: "ana@test.com",
@@ -22,5 +26,10 @@ describe("CreateUserHandler", () => {
       email: "ana@test.com",
       password: "stored-hash",
     });
+    expect(eventPublisher.toEveryone).toHaveBeenCalledWith(
+      expect.objectContaining({
+        meta: expect.objectContaining({ name: "user-created" }),
+      }),
+    );
   });
 });

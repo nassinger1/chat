@@ -1,12 +1,23 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { BrokerModule } from "./broker/broker.module.js";
 import { LoggerModule } from "./common/logger/logger.module.js";
-import { type AppConfig, appConfig } from "./config/app-config.js";
+import {
+  type AppConfig,
+  AppEnvironment,
+  appConfig,
+} from "./config/app-config.js";
 import { validateAppConfig } from "./config/app-config-validation.js";
 import { globalProviders } from "./global-providers.js";
 import { HealthModule } from "./health/health.module.js";
+import { UsersModule } from "./users/users.module.js";
+
+const THROTTLED_ENVIRONMENTS: string[] = [
+  AppEnvironment.PRODUCTION,
+  AppEnvironment.STAGING,
+];
 
 @Module({
   imports: [
@@ -22,9 +33,14 @@ import { HealthModule } from "./health/health.module.js";
         uri: config.get("mongoConn", { infer: true }),
       }),
     }),
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60_000, limit: 10 }],
+      skipIf: () => !THROTTLED_ENVIRONMENTS.includes(process.env.APP_ENV ?? ""),
+    }),
     LoggerModule,
     BrokerModule,
     HealthModule,
+    UsersModule,
   ],
   providers: globalProviders,
 })

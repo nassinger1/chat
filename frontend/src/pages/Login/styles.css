@@ -1,0 +1,31 @@
+.auth-form {
+  .remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    color: #4a4f5a;
+  }
+
+  .error {
+    margin: 0 0 16px;
+    color: #c0263b;
+  }
+
+  button {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #20242c;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #20242c;
+    border-radius: 999px;
+  }
+
+  button:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+}

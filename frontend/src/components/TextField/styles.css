@@ -1,0 +1,18 @@
+.text-field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+
+  label {
+    font-size: 14px;
+    color: #4a4f5a;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #d5d8de;
+    border-radius: 6px;
+  }
+}

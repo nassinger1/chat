@@ -1,4 +1,5 @@
 import { AuthContextProvider } from "@contexts/authContext";
+import { RealtimeContextProvider } from "@contexts/realtimeContext";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
@@ -12,7 +13,9 @@ if (!root) throw new Error("Root element not found");
 createRoot(root).render(
   <StrictMode>
     <AuthContextProvider>
-      <RouterProvider router={router} />
+      <RealtimeContextProvider>
+        <RouterProvider router={router} />
+      </RealtimeContextProvider>
     </AuthContextProvider>
   </StrictMode>,
 );

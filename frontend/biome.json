@@ -1,0 +1,29 @@
+{
+  "files": {
+    "includes": ["**", "!!**/dist", "!public"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        "noStaticOnlyClass": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "error"
+      }
+    }
+  },
+  "vcs": {
+    "enabled": false
+  }
+}

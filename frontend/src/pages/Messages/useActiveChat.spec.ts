@@ -65,6 +65,24 @@ describe("useActiveChat", () => {
     expect(result.current.messages).toHaveLength(1);
   });
 
+  it("keeps a message that arrives while the history loads", async () => {
+    let finishHistory: (history: ChatMessage[]) => void = () => undefined;
+
+    vi.mocked(ChatApi.findMessages).mockReturnValue(
+      new Promise((resolve) => {
+        finishHistory = resolve;
+      }),
+    );
+
+    const result = await open();
+
+    act(() => listener(createEvent(createMessage("b", "1"))));
+
+    await act(async () => finishHistory([createMessage("a", "1")]));
+
+    expect(result.current.messages.map(({ id }) => id)).toEqual(["a", "b"]);
+  });
+
   it("ignores another conversation", async () => {
     const result = await open();
 

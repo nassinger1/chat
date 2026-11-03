@@ -3,6 +3,12 @@ import type { ChatMessage } from "@services/api.types";
 import { ChatApi } from "@services/chatApi";
 import { useCallback, useEffect, useState } from "react";
 
+const mergeMessages = (history: ChatMessage[], live: ChatMessage[]) => {
+  const historyIds = new Set(history.map((message) => message.id));
+
+  return [...history, ...live.filter(({ id }) => !historyIds.has(id))];
+};
+
 export const useActiveChat = (peerId: string | null) => {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -26,12 +32,16 @@ export const useActiveChat = (peerId: string | null) => {
 
     const open = async () => {
       const conversation = await ChatApi.openConversation(peerId);
-      const history = await ChatApi.findMessages(conversation.id);
 
       if (isCancelled) return;
 
       setConversationId(conversation.id);
-      setMessages(history);
+
+      const history = await ChatApi.findMessages(conversation.id);
+
+      if (isCancelled) return;
+
+      setMessages((current) => mergeMessages(history, current));
       await ChatApi.markRead(conversation.id);
     };
 

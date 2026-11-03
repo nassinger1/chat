@@ -81,6 +81,15 @@ describe("useContacts", () => {
     expect(result.current.contacts[0].unreadCount).toBe(1);
   });
 
+  it("counts a redelivered message only once", async () => {
+    const result = await load();
+
+    act(() => listener(messageFromBruno));
+    act(() => listener(messageFromBruno));
+
+    expect(result.current.contacts[0].unreadCount).toBe(1);
+  });
+
   it("does not raise the badge for the open chat", async () => {
     const result = await load("bruno");
 

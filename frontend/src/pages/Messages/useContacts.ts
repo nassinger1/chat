@@ -75,6 +75,7 @@ export const useContacts = (activeUserId: string | null) => {
   const { user: currentUser } = useAuth();
   const currentUserId = currentUser?.id;
   const activeUserIdRef = useRef(activeUserId);
+  const seenMessageIds = useRef(new Set<string>());
 
   useEffect(() => {
     activeUserIdRef.current = activeUserId;
@@ -122,6 +123,10 @@ export const useContacts = (activeUserId: string | null) => {
 
       if (event.meta.name === "message-created") {
         const message = event.data as ChatMessage;
+
+        if (seenMessageIds.current.has(message.id)) return;
+
+        seenMessageIds.current.add(message.id);
 
         setContacts((current) =>
           current.map((contact) => {

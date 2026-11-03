@@ -1,6 +1,6 @@
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, type TestingModule } from "@nestjs/testing";
-import { startInMemoryMongo } from "@test/utils/in-memory-mongo.js";
+import { createTestMongoUri } from "@test/utils/in-memory-mongo.js";
 import { type Model, Types } from "mongoose";
 import {
   ConversationDocument,
@@ -9,7 +9,6 @@ import {
 import { ConversationRepository } from "./conversation.repository.js";
 
 describe("ConversationRepository", () => {
-  let mongo: Awaited<ReturnType<typeof startInMemoryMongo>>;
   let moduleRef: TestingModule;
   let repository: ConversationRepository;
   let model: Model<ConversationDocument>;
@@ -19,10 +18,9 @@ describe("ConversationRepository", () => {
   const carla = new Types.ObjectId().toString();
 
   beforeAll(async () => {
-    mongo = await startInMemoryMongo();
     moduleRef = await Test.createTestingModule({
       imports: [
-        MongooseModule.forRoot(mongo.uri),
+        MongooseModule.forRoot(createTestMongoUri()),
         MongooseModule.forFeature([
           { name: ConversationDocument.name, schema: ConversationSchema },
         ]),
@@ -39,7 +37,6 @@ describe("ConversationRepository", () => {
 
   afterAll(async () => {
     await moduleRef.close();
-    await mongo.stop();
   });
 
   it("gives one conversation for a pair, in either order", async () => {

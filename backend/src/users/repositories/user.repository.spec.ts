@@ -1,12 +1,11 @@
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, type TestingModule } from "@nestjs/testing";
-import { startInMemoryMongo } from "@test/utils/in-memory-mongo.js";
+import { createTestMongoUri } from "@test/utils/in-memory-mongo.js";
 import type { Model } from "mongoose";
 import { UserDocument, UserSchema } from "../user.schema.js";
 import { UserRepository } from "./user.repository.js";
 
 describe("UserRepository", () => {
-  let mongo: Awaited<ReturnType<typeof startInMemoryMongo>>;
   let moduleRef: TestingModule;
   let repository: UserRepository;
   let model: Model<UserDocument>;
@@ -18,10 +17,9 @@ describe("UserRepository", () => {
   };
 
   beforeAll(async () => {
-    mongo = await startInMemoryMongo();
     moduleRef = await Test.createTestingModule({
       imports: [
-        MongooseModule.forRoot(mongo.uri),
+        MongooseModule.forRoot(createTestMongoUri()),
         MongooseModule.forFeature([
           { name: UserDocument.name, schema: UserSchema },
         ]),
@@ -38,7 +36,6 @@ describe("UserRepository", () => {
 
   afterAll(async () => {
     await moduleRef.close();
-    await mongo.stop();
   });
 
   it("stores the email in lowercase", async () => {

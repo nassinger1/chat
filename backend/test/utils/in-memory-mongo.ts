@@ -1,7 +1,4 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { randomUUID } from "node:crypto";
+import { inject } from "vitest";
 
-export async function startInMemoryMongo() {
-  const server = await MongoMemoryServer.create();
-
-  return { uri: server.getUri(), stop: () => server.stop() };
-}
+export const createTestMongoUri = () => `${inject("mongoUri")}${randomUUID()}`;

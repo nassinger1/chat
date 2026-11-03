@@ -32,6 +32,7 @@ export const useActiveChat = (peerId: string | null) => {
 
       setConversationId(conversation.id);
       setMessages(history);
+      await ChatApi.markRead(conversation.id);
     };
 
     void open();
@@ -47,9 +48,13 @@ export const useActiveChat = (peerId: string | null) => {
 
       const message = event.data as ChatMessage;
 
-      if (message.conversationId === conversationId) addMessage(message);
+      if (message.conversationId !== conversationId) return;
+
+      addMessage(message);
+
+      if (message.senderId === peerId) void ChatApi.markRead(conversationId);
     });
-  }, [subscribe, conversationId, addMessage]);
+  }, [subscribe, conversationId, peerId, addMessage]);
 
   useEffect(() => {
     if (!conversationId) return;

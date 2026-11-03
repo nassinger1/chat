@@ -18,11 +18,19 @@ const bruno = { id: "bruno", name: "Bruno", status: "offline" } as User;
 const createEvent = (name: string, data: unknown) =>
   ({ data, meta: { name } }) as ChatEvent;
 
+const messageFromBruno = createEvent("message-created", {
+  id: "1",
+  conversationId: "c1",
+  senderId: "bruno",
+  text: "Hi",
+  createdAt: "2026-01-01T10:00:00.000Z",
+});
+
 describe("useContacts", () => {
   let listener: (event: ChatEvent) => void;
 
-  const load = async () => {
-    const { result } = renderHook(() => useContacts());
+  const load = async (activeUserId: string | null = null) => {
+    const { result } = renderHook(() => useContacts(activeUserId));
 
     await waitFor(() => expect(result.current.contacts).toHaveLength(1));
 
@@ -63,5 +71,32 @@ describe("useContacts", () => {
     );
 
     expect(result.current.contacts).toHaveLength(2);
+  });
+
+  it("raises the badge for a closed chat", async () => {
+    const result = await load();
+
+    act(() => listener(messageFromBruno));
+
+    expect(result.current.contacts[0].unreadCount).toBe(1);
+  });
+
+  it("does not raise the badge for the open chat", async () => {
+    const result = await load("bruno");
+
+    act(() => listener(messageFromBruno));
+
+    expect(result.current.contacts[0].unreadCount).toBe(0);
+  });
+
+  it("clears the badge on conversation-read", async () => {
+    const result = await load();
+
+    act(() => listener(messageFromBruno));
+    act(() =>
+      listener(createEvent("conversation-read", { conversationId: "c1" })),
+    );
+
+    expect(result.current.contacts[0].unreadCount).toBe(0);
   });
 });

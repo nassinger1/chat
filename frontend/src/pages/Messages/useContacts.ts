@@ -1,6 +1,7 @@
 import { useAuth } from "@contexts/useAuth";
 import { useRealtime } from "@contexts/useRealtime";
 import type {
+  ChatMessage,
   Conversation,
   LastMessage,
   User,
@@ -8,7 +9,7 @@ import type {
 } from "@services/api.types";
 import { ChatApi } from "@services/chatApi";
 import { UsersApi } from "@services/usersApi";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type Contact = {
   user: User;
@@ -20,6 +21,10 @@ export type Contact = {
 type PresenceChange = {
   userId: string;
   status: UserStatus;
+};
+
+type ConversationRead = {
+  conversationId: string;
 };
 
 const toContacts = (
@@ -42,11 +47,38 @@ const toContacts = (
   });
 };
 
-export const useContacts = () => {
+const applyMessage = (
+  contact: Contact,
+  message: ChatMessage,
+  isChatOpen: boolean,
+): Contact => {
+  const isFromContact = message.senderId === contact.user.id;
+
+  return {
+    ...contact,
+    conversationId: message.conversationId,
+    unreadCount:
+      isFromContact && !isChatOpen
+        ? contact.unreadCount + 1
+        : contact.unreadCount,
+    lastMessage: {
+      text: message.text,
+      senderId: message.senderId,
+      sentAt: message.createdAt,
+    },
+  };
+};
+
+export const useContacts = (activeUserId: string | null) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const { subscribe, subscribeToReconnect } = useRealtime();
   const { user: currentUser } = useAuth();
   const currentUserId = currentUser?.id;
+  const activeUserIdRef = useRef(activeUserId);
+
+  useEffect(() => {
+    activeUserIdRef.current = activeUserId;
+  }, [activeUserId]);
 
   const loadContacts = useCallback(async () => {
     const [users, conversations] = await Promise.all([
@@ -86,6 +118,36 @@ export const useContacts = () => {
           ...current,
           { user, conversationId: null, unreadCount: 0, lastMessage: null },
         ]);
+      }
+
+      if (event.meta.name === "message-created") {
+        const message = event.data as ChatMessage;
+
+        setContacts((current) =>
+          current.map((contact) => {
+            const isChatOpen = contact.user.id === activeUserIdRef.current;
+            const isSameChat =
+              contact.conversationId === message.conversationId ||
+              contact.user.id === message.senderId ||
+              (isChatOpen && message.senderId === currentUserId);
+
+            if (!isSameChat) return contact;
+
+            return applyMessage(contact, message, isChatOpen);
+          }),
+        );
+      }
+
+      if (event.meta.name === "conversation-read") {
+        const { conversationId } = event.data as ConversationRead;
+
+        setContacts((current) =>
+          current.map((contact) =>
+            contact.conversationId === conversationId
+              ? { ...contact, unreadCount: 0 }
+              : contact,
+          ),
+        );
       }
     });
   }, [subscribe, currentUserId]);

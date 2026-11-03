@@ -18,6 +18,7 @@ import { useAuth } from "./useAuth";
 
 const HEARTBEAT_INTERVAL_IN_MS = 20_000;
 const RENEW_BEFORE_EXPIRY_IN_MS = 60_000;
+const RETRY_CONNECT_IN_MS = 5_000;
 
 type EventListener = (event: ChatEvent) => void;
 type ReconnectListener = () => void;
@@ -49,34 +50,47 @@ export function RealtimeContextProvider({ children }: PropsWithChildren) {
     let isCancelled = false;
     let connection: BrokerConnection | null = null;
     let renewTimer: number | undefined;
+    let hasFailed = false;
 
-    const connect = async () => {
-      const credentials = await AuthApi.getBrokerCredentials();
-      const opened = await openBrokerConnection(
-        credentials,
-        userId,
-        dispatchEvent,
-      );
-
-      if (isCancelled) {
-        await opened.close();
-        return;
-      }
-
-      const previous = connection;
-
-      connection = opened;
-      void watchReconnects(opened, dispatchReconnect);
-
-      if (previous) {
-        await previous.close();
-        dispatchReconnect();
-      }
-
-      const expiresAt = new Date(credentials.expiresAt).getTime();
-      const delay = expiresAt - Date.now() - RENEW_BEFORE_EXPIRY_IN_MS;
+    const scheduleConnect = (delay: number) => {
+      if (isCancelled) return;
 
       renewTimer = window.setTimeout(() => void connect(), delay);
+    };
+
+    const connect = async () => {
+      try {
+        const credentials = await AuthApi.getBrokerCredentials();
+        const opened = await openBrokerConnection(
+          credentials,
+          userId,
+          dispatchEvent,
+        );
+
+        if (isCancelled) {
+          await opened.close();
+          return;
+        }
+
+        const previous = connection;
+
+        connection = opened;
+        void watchReconnects(opened, dispatchReconnect);
+
+        await previous?.close();
+
+        if (previous || hasFailed) dispatchReconnect();
+
+        hasFailed = false;
+
+        const expiresAt = new Date(credentials.expiresAt).getTime();
+
+        scheduleConnect(expiresAt - Date.now() - RENEW_BEFORE_EXPIRY_IN_MS);
+      } catch (error) {
+        console.error(error);
+        hasFailed = true;
+        scheduleConnect(RETRY_CONNECT_IN_MS);
+      }
     };
 
     void connect();

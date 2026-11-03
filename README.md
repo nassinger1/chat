@@ -1,84 +1,64 @@
 # Chat
 
-A real-time one-to-one chat. Users register, log in, pick any other registered user and exchange messages that appear on the recipient's screen right away. The contact list shows who is online, and unread messages show up as a badge on the contact and in the browser tab title.
+Chat em tempo real entre duas pessoas. Os usuários se cadastram, entram e conversam com qualquer outro usuário. A lista de contatos mostra quem está online e quantas mensagens não foram lidas.
 
-- Backend: NestJS, MongoDB, Redis (sessions), NATS with JetStream
-- Frontend: React, Vite, TypeScript
-- Tests: Vitest in both projects. Lint and format: Biome in both projects
+- **Backend:** NestJS, MongoDB, Redis e NATS com JetStream
+- **Frontend:** React, Vite e TypeScript
+- **Testes e lint:** Vitest e Biome nos dois projetos
 
-## Prerequisites
+Detalhes de cada projeto: [backend](backend/README.md) e [frontend](frontend/README.md).
 
-- Node.js 24.9 or newer (the NATS config script runs as a TypeScript file with `node`)
-- Docker with Docker Compose
+## Como rodar
 
-## Repository layout
+Você precisa do Node.js 24.9 ou mais novo e do Docker.
 
-| Folder | Contents |
-| --- | --- |
-| `backend` | NestJS API and the NATS publisher/consumer code |
-| `frontend` | React app |
-| `infra/nats` | NATS server config. `nats.conf` is generated locally and is not committed |
-| `compose-dev.yml` | MongoDB, Redis and NATS for local development |
-
-## Running it locally
-
-1. Install dependencies. From `backend`, then from `frontend`:
+1. Em `backend` e depois em `frontend`, instale as dependências e crie o arquivo de ambiente:
 
    ```bash
    npm ci
-   ```
-
-2. Create the environment files. From `backend`, then from `frontend`:
-
-   ```bash
    cp .env.example .env
    ```
 
-   On PowerShell, use `Copy-Item .env.example .env`.
-
-3. Generate the NATS configuration. From `backend`:
+2. Em `backend`, gere a configuração do NATS e cole as três linhas impressas no `backend/.env`. Rode só uma vez, porque cada execução cria chaves novas:
 
    ```bash
    node scripts/generate-nats-config.ts
    ```
 
-   This writes `infra/nats/nats.conf` and prints three lines (`NATS_USER_JWT`, `NATS_USER_SEED`, `NATS_ACCOUNT_SEED`). Paste them into `backend/.env`. Running the script again creates new keys and replaces `nats.conf`, so run it once per environment.
+3. Defina um valor longo e aleatório para `SESSION_SECRET` no `backend/.env`.
 
-4. Set `SESSION_SECRET` in `backend/.env` to a long random value.
-
-5. Start MongoDB, Redis and NATS. From the repository root:
+4. Na raiz do repositório, suba o MongoDB, o Redis e o NATS:
 
    ```bash
    docker compose -f compose-dev.yml up -d
    ```
 
-6. Start the backend. From `backend`:
+5. Em `backend`, inicie a API:
 
    ```bash
    npm run start:dev
    ```
 
-7. Start the frontend. From `frontend`:
+6. Em `frontend`, inicie o app:
 
    ```bash
    npm run dev
    ```
 
-8. Open `http://localhost:5173`. Use `localhost`, not `127.0.0.1`, so the session cookie matches the configured origin. To try the chat, register two users, one in a normal window and one in a private window.
+7. Abra `http://localhost:5173` e cadastre dois usuários, um em uma janela normal e outro em uma janela anônima.
 
-Useful local addresses: the API on `http://localhost:3000`, NATS monitoring on `http://localhost:8222` (for example `/connz` lists connections), and NATS over WebSocket on `ws://localhost:8080`.
+## Build e testes
 
-## Tests and checks
-
-From `backend`:
+Em `backend`:
 
 ```bash
 npm run lint
 npm run type-check
 npm test
+npm run build
 ```
 
-From `frontend`:
+Em `frontend`:
 
 ```bash
 npm run lint
@@ -86,104 +66,46 @@ npm test
 npm run build
 ```
 
-The backend repository tests use `mongodb-memory-server`, which downloads a MongoDB binary the first time they run. `backend/.env.test` holds the settings for the test run.
+## Modo cluster
 
-To print the events a user receives from NATS, get that user's credentials from `POST /auth/broker-credentials` and run from `backend`:
-
-```bash
-node scripts/listen-events.ts <userId> <jwt> <seed>
-```
-
-## Running in cluster mode
-
-`src/cluster.ts` starts one worker per CPU core, and each worker runs the normal application. All workers share port 3000. From `backend`:
+Em `backend`, rode vários processos na mesma porta. `WEB_CONCURRENCY` define quantos; sem ela, é um por núcleo da CPU:
 
 ```bash
 npm run build
 npm run start:cluster
 ```
 
-Set `WEB_CONCURRENCY` to choose the number of workers. On PowerShell:
-
-```powershell
-$env:WEB_CONCURRENCY = 3
-npm run start:cluster
-```
-
-With three workers, `http://localhost:8222/connz` lists three backend connections. If a worker exits, the primary process starts a new one.
-
-## Architecture
+## Como funciona
 
 ```
-                    HTTP + session cookie
-  Browser  ----------------------------->  NestJS backend  --->  MongoDB
+                    HTTP + cookie de sessão
+  Navegador  --------------------------->  Backend NestJS  --->  MongoDB
   (React)                                      |    |
-     ^                                         |    +--------->  Redis (sessions)
-     |  WebSocket, subscribe only              |
+     ^                                         |    +--------->  Redis (sessões)
+     |  WebSocket, só assinatura               |
      +------------------  NATS  <--------------+
-                     (JetStream + core)
 ```
 
-Main decisions:
+- **O navegador envia por HTTP e só escuta pelo NATS.** Quem envia a mensagem sempre vem da sessão, e a credencial do NATS no navegador não pode publicar.
+- **A mensagem é salva antes de ser publicada.** O MongoDB é a fonte da verdade. Ao reconectar, o navegador busca os dados de novo por HTTP.
+- **O JetStream distribui as mensagens.** Os processos do backend dividem um único consumidor, então cada evento é tratado por um deles, que avisa os dois participantes.
+- **As sessões ficam no Redis.** Assim, um login feito em um processo vale para todos.
+- **O status online usa heartbeat.** O navegador avisa a cada 20 segundos, e quem para de avisar fica offline depois de cerca de um minuto.
 
-- **The browser sends over HTTP and only listens on NATS.** The identity of the sender always comes from the session. The NATS credential given to a browser can subscribe to its own subject and the broadcast subject, and cannot publish.
-- **Save first, then publish.** A message is saved in MongoDB, then published to JetStream. MongoDB is the source of truth. After the browser connects or reconnects, it refetches data over HTTP, because core NATS does not replay events missed while disconnected.
-- **JetStream for delivery to users.** Publishing a message creates a JetStream event. One durable consumer shared by all backend processes receives it, so each event is handled by one process. That process publishes the result to `chat.events.<userId>` for both participants.
-- **Sessions in Redis.** Each process has its own memory, so a login stored in one process would be invisible to the others. Redis makes sessions shared, which is what allows several processes behind one port.
-- **Short-lived NATS credentials.** `POST /auth/broker-credentials` returns a JWT and seed that expire. The frontend asks for new ones shortly before expiry, opens the new connection, then closes the old one.
-- **Repository boundary.** Only repository classes talk to MongoDB, and only the `*-res.dto.ts` mappers shape what leaves the API.
-- **Duplicate conversations are prevented by the database.** A unique `participantsKey` (the two sorted user IDs) means two users can only ever have one conversation, even if two requests race.
+## Problemas e soluções
 
-NATS subjects:
+- **Assinar credenciais do NATS:** o `@nestjs/jwt` não gera as assinaturas `ed25519-nkey` que o NATS exige, então as credenciais usam `@nats-io/jwt` e `@nats-io/nkeys`.
+- **Novas tentativas no JetStream:** um `nak` simples reenvia na hora, mesmo com `backoff` configurado. O consumidor passa um atraso explícito em cada `nak`, o que dá tempo para uma falha temporária passar.
+- **Eventos perdidos:** o NATS core não repete o que foi perdido durante uma desconexão, por isso os dados são buscados de novo ao reconectar.
+- **Conexões duplicadas:** o StrictMode do React roda os efeitos duas vezes em desenvolvimento. Uma conexão que termina de abrir depois da limpeza do efeito se fecha sozinha.
+- **Mensagens repetidas:** a mesma mensagem pode chegar pela resposta HTTP e pelo evento, e o JetStream pode reenviá-la. O frontend ignora um ID que já conhece.
+- **Respostas atrasadas:** ao trocar de contato rápido, o histórico antigo pode chegar depois do novo. O efeito ignora o resultado depois da limpeza.
+- **Testes instáveis:** subir um MongoDB por arquivo de teste causava falhas por tempo esgotado. Agora há um único servidor por execução, com um banco separado para cada arquivo.
 
-| Subject | Type | Used for |
-| --- | --- | --- |
-| `chat.events.<userId>` | Core | New messages and read updates for one user |
-| `chat.events` | Core | New users and presence changes |
-| `chat.service.messages.created` | JetStream | Fan-out of new messages |
-| `chat.service.health.check` | Core request-reply | Health over NATS |
+## Deploy
 
-HTTP routes:
-
-| Method and path | Auth | Purpose |
-| --- | --- | --- |
-| `POST /users` | Public | Register |
-| `GET /users` | Session | List other users, paginated |
-| `POST /auth/login` | Public | Log in |
-| `POST /auth/logout` | Session | Log out |
-| `GET /auth/session` | Public | Check the current session |
-| `POST /auth/broker-credentials` | Session | Get NATS credentials |
-| `GET /conversations` | Session | List my conversations |
-| `POST /conversations` | Session | Open a conversation with a user |
-| `GET /conversations/:id/messages` | Session | Message history |
-| `POST /conversations/:id/messages` | Session | Send a message |
-| `POST /conversations/:id/read` | Session | Mark as read |
-| `POST /presence/heartbeat` | Session | Keep the user online |
-| `GET /health/live`, `GET /health/ready` | Public | Health |
-
-Presence works with a heartbeat. An open browser calls `POST /presence/heartbeat` every 20 seconds, and a user whose heartbeat stops is marked offline by a periodic sweep.
-
-## Development notes
-
-Problems found along the way and how they were solved.
-
-- **`@nats-io/transport-ws` does not exist.** The package returns 404 on npm. `wsconnect` is exported by `@nats-io/nats-core`, so the frontend depends on that package only.
-- **`@nestjs/jwt` cannot sign NATS credentials.** NATS user credentials need `ed25519-nkey` signatures, which `@nestjs/jwt` cannot produce. Login uses sessions, so nothing else needs it, and `@nats-io/jwt` with `@nats-io/nkeys` creates the NATS credentials instead. `@nats-io/jwt` is pre-1.0, so its version is pinned exactly.
-- **Plain `nak` ignores `backoff`.** A `backoff` list on a JetStream consumer does not apply to `nak`, and a plain `nak` redelivers immediately. The handler uses `nak` with an explicit delay (about 1, 3, 8, 18 and 48 seconds after the first attempt, giving up after 6 deliveries), so a temporary failure such as MongoDB restarting has time to clear.
-- **Sessions need Redis for multiple processes.** An in-memory session store belongs to one process, so a login made on one worker would not be known by the others. Redis holds the sessions for all of them.
-- **Save before publishing.** If the event were published first and the save failed, users would see a message that does not exist. Saving first means a failed publish loses a notification at worst, and the next refetch shows the correct state.
-- **Refetch after reconnect.** Core NATS does not replay missed events, so after a reconnect, or after swapping credentials, the contact list and the open chat are loaded again over HTTP.
-- **React StrictMode runs effects twice in development.** Opening a NATS connection is asynchronous, so the first effect can be cleaned up before its connection finishes opening. The effect has an `isCancelled` flag, and a connection that opens after cleanup closes itself. Without it, development showed two connections per tab.
-- **The same message can arrive twice.** It comes back from the HTTP response and from the NATS event, and JetStream can redeliver. The chat ignores a message ID it already has.
-- **A slow answer must not replace a newer chat.** When switching contacts quickly, the history request for the first contact can finish after the second one was selected. The load effect ignores results after cleanup.
-- **The Vite template ships tools this project does not use.** The scaffold includes `oxlint`. It was removed in favor of Biome so both projects share one lint and format setup.
-- **Type checking the frontend.** The root `tsconfig.json` of a Vite project only references other configs and compiles nothing. Use `npx tsc -p tsconfig.app.json --noEmit`, or `npm run build`, which also covers it.
-
-## Deployment notes
-
-- Serve the NATS WebSocket over TLS and return a `wss://` URL in `NATS_WS_URL`. The local config uses `no_tls: true` for development only.
-- Use a long random `SESSION_SECRET`, and serve the API over HTTPS so the session cookie can be marked secure.
-- Set `FRONTEND_ORIGIN` to the real frontend origin and `VITE_API_URL` to the real API address.
-- The local NATS config keeps accounts in a static file. A production setup needs a persistent resolver, so credentials survive a restart, and the operator and account keys must be stored as secrets, never committed.
-- Keep MongoDB and Redis off public networks, and use authentication on both.
-- Run the backend in cluster mode or behind a process manager, with `WEB_CONCURRENCY` set to the number of workers wanted.
+- Use `wss://` no `NATS_WS_URL` e sirva a API por HTTPS.
+- Configure `SESSION_SECRET`, `FRONTEND_ORIGIN` e `VITE_API_URL` com os valores reais.
+- Guarde as chaves do NATS como segredos e use um resolver persistente, para as credenciais sobreviverem a um reinício.
+- Mantenha o MongoDB e o Redis fora de redes públicas e com autenticação.
+- Rode o backend em modo cluster ou com um gerenciador de processos.

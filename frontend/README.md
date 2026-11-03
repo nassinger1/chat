@@ -1,32 +1,47 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Interface do chat, feita com React e Vite. As mensagens são enviadas por HTTP para o backend, e as atualizações em tempo real chegam pelo NATS.
 
-Currently, two official plugins are available:
+## Como rodar
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Você precisa do Node.js 24.9 ou mais novo e do [backend](../backend/README.md) rodando.
 
-## React Compiler
+1. Instale as dependências:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+   ```bash
+   npm ci
+   ```
 
-## Expanding the Oxlint configuration
+2. Crie o arquivo de ambiente. O valor padrão de `VITE_API_URL` já aponta para o backend local:
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+   ```bash
+   cp .env.example .env
+   ```
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+3. Inicie o app:
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+   ```bash
+   npm run dev
+   ```
+
+4. Abra `http://localhost:5173`. Use `localhost` em vez de `127.0.0.1`, para o cookie de sessão funcionar.
+
+Para testar a conversa, cadastre dois usuários: um em uma janela normal e outro em uma janela anônima.
+
+## Comandos
+
+| Comando | O que faz |
+| --- | --- |
+| `npm run dev` | Inicia o app em modo de desenvolvimento |
+| `npm test` | Roda os testes |
+| `npm run lint` | Verifica o lint e a formatação |
+| `npm run build` | Verifica os tipos e gera o build em `dist` |
+
+## Como o código é organizado
+
+| Pasta em `src` | Conteúdo |
+| --- | --- |
+| `pages` | Telas de login, cadastro e mensagens |
+| `components` | Componentes visuais reutilizáveis |
+| `contexts` | Sessão do usuário e conexão em tempo real |
+| `services` | Chamadas à API e cliente do NATS |

@@ -1,0 +1,12 @@
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 24px;
+  background: #fff;
+
+  .details {
+    display: grid;
+    gap: 2px;
+  }
+}

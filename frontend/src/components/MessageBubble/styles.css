@@ -1,0 +1,31 @@
+.message-bubble {
+  width: fit-content;
+  max-width: 70%;
+  padding: 12px 20px;
+  margin-bottom: 16px;
+  background: #fff;
+  border-radius: 16px;
+
+  p {
+    margin: 0 0 4px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  time {
+    display: block;
+    font-size: 13px;
+    color: #6b7180;
+    text-align: right;
+  }
+
+  &.own {
+    margin-left: auto;
+    color: #fff;
+    background: #3584e4;
+
+    time {
+      color: #fff;
+    }
+  }
+}

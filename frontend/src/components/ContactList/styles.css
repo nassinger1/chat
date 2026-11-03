@@ -1,0 +1,5 @@
+.contact-list {
+  padding: 16px;
+  overflow-y: auto;
+  border-right: 1px solid #e8e9ed;
+}

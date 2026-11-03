@@ -1,0 +1,19 @@
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #6b7180;
+
+  &::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    background: #b6bac3;
+    border-radius: 50%;
+  }
+
+  &.online::before {
+    background: #4caf50;
+  }
+}

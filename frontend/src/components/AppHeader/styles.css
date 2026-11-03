@@ -1,0 +1,36 @@
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid #e8e9ed;
+
+  h1 {
+    margin: 0;
+    font-size: 22px;
+  }
+
+  .user {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .details {
+    display: grid;
+    text-align: right;
+  }
+
+  .details span {
+    font-size: 14px;
+    color: #6b7180;
+  }
+
+  button {
+    padding: 8px 16px;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #20242c;
+    border-radius: 999px;
+  }
+}

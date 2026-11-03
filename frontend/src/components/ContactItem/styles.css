@@ -1,0 +1,45 @@
+.contact-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  margin-bottom: 8px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: #f7f7f8;
+  border: 0;
+  border-radius: 16px;
+
+  &.selected {
+    background: #d3e5f8;
+  }
+
+  .details {
+    min-width: 0;
+    flex: 1;
+    display: grid;
+    gap: 2px;
+  }
+
+  em {
+    overflow: hidden;
+    font-size: 14px;
+    color: #6b7180;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .badge {
+    min-width: 24px;
+    padding: 2px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    background: #3584e4;
+    border-radius: 999px;
+  }
+}

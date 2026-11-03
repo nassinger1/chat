@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import type { ICommandHandler } from "@/common/interfaces/command-handler.interface.js";
 import { ConversationRepository } from "@/conversations/repositories/conversation.repository.js";
 import {
@@ -13,6 +13,8 @@ import type { MessageResDto } from "../dtos/message-res.dto.js";
 export class DeliverMessageHandler
   implements ICommandHandler<MessageResDto, void>
 {
+  private readonly logger = new Logger(DeliverMessageHandler.name);
+
   constructor(
     private readonly conversationRepository: ConversationRepository,
     private readonly eventPublisher: EventPublisher,
@@ -36,5 +38,7 @@ export class DeliverMessageHandler
     for (const { userId } of conversation.participants) {
       this.eventPublisher.toUser(userId, event);
     }
+
+    this.logger.debug(`Message ${message.id} delivered by ${process.pid}`);
   }
 }

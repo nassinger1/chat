@@ -60,7 +60,7 @@ export class AuthenticationHttpController {
     return req.session.authenticatedContext;
   }
 
-  @RespondWith(toSessionResDto)
+  @RespondWith(() => toSessionResDto(undefined))
   @HttpCode(200)
   @Post("logout")
   async logout(

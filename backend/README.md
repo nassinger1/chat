@@ -42,14 +42,14 @@ Você precisa do Node.js 24.9 ou mais novo e do Docker.
 
 ## Comandos
 
-| Comando | O que faz |
-| --- | --- |
-| `npm run start:dev` | Inicia a API e reinicia ao salvar um arquivo |
-| `npm test` | Roda os testes |
-| `npm run lint` | Verifica o lint e a formatação |
-| `npm run type-check` | Verifica os tipos |
-| `npm run build` | Gera o build em `dist` |
-| `npm run start:cluster` | Roda o build em vários processos |
+| Comando                 | O que faz                                    |
+| ----------------------- | -------------------------------------------- |
+| `npm run start:dev`     | Inicia a API e reinicia ao salvar um arquivo |
+| `npm test`              | Roda os testes                               |
+| `npm run lint`          | Verifica o lint e a formatação               |
+| `npm run type-check`    | Verifica os tipos                            |
+| `npm run build`         | Gera o build em `dist`                       |
+| `npm run start:cluster` | Roda o build em vários processos             |
 
 No modo cluster, a variável `WEB_CONCURRENCY` define o número de processos. Sem ela, é um por núcleo da CPU.
 

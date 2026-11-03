@@ -20,7 +20,7 @@
       "complexity": {
         "noStaticOnlyClass": "off"
       },
-      "recommended": true,
+      "preset": "recommended",
       "style": {
         "noRestrictedImports": {
           "level": "error",

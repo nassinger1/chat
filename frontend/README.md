@@ -30,18 +30,18 @@ Para testar a conversa, cadastre dois usuários: um em uma janela normal e outro
 
 ## Comandos
 
-| Comando | O que faz |
-| --- | --- |
-| `npm run dev` | Inicia o app em modo de desenvolvimento |
-| `npm test` | Roda os testes |
-| `npm run lint` | Verifica o lint e a formatação |
+| Comando         | O que faz                                  |
+| --------------- | ------------------------------------------ |
+| `npm run dev`   | Inicia o app em modo de desenvolvimento    |
+| `npm test`      | Roda os testes                             |
+| `npm run lint`  | Verifica o lint e a formatação             |
 | `npm run build` | Verifica os tipos e gera o build em `dist` |
 
 ## Como o código é organizado
 
-| Pasta em `src` | Conteúdo |
-| --- | --- |
-| `pages` | Telas de login, cadastro e mensagens |
-| `components` | Componentes visuais reutilizáveis |
-| `contexts` | Sessão do usuário e conexão em tempo real |
-| `services` | Chamadas à API e cliente do NATS |
+| Pasta em `src` | Conteúdo                                  |
+| -------------- | ----------------------------------------- |
+| `pages`        | Telas de login, cadastro e mensagens      |
+| `components`   | Componentes visuais reutilizáveis         |
+| `contexts`     | Sessão do usuário e conexão em tempo real |
+| `services`     | Chamadas à API e cliente do NATS          |

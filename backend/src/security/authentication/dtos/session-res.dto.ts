@@ -6,7 +6,7 @@ export type SessionResDto = {
 };
 
 export function toSessionResDto(
-  context: AuthenticatedContext | undefined | void,
+  context: AuthenticatedContext | undefined,
 ): SessionResDto {
   if (!context) return { isAuthenticated: false, user: null };
 

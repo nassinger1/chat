@@ -108,4 +108,27 @@ describe("useContacts", () => {
 
     expect(result.current.contacts[0].unreadCount).toBe(0);
   });
+
+  it("leaves out a conversation with no other person", async () => {
+    vi.mocked(ChatApi.findConversations).mockResolvedValue([
+      {
+        id: "c2",
+        peer: null,
+        unreadCount: 4,
+        lastMessage: null,
+        updatedAt: "2026-01-01T10:00:00.000Z",
+      },
+    ]);
+
+    const result = await load();
+
+    expect(result.current.contacts).toEqual([
+      {
+        user: bruno,
+        conversationId: null,
+        unreadCount: 0,
+        lastMessage: null,
+      },
+    ]);
+  });
 });

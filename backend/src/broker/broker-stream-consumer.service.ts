@@ -41,12 +41,13 @@ export class BrokerStreamConsumerService implements OnModuleDestroy {
 
     this.runningConsumers.push(messages);
 
-    void this.processMessages(messages, handleMessage);
+    void this.processMessages(messages, handleMessage, consumer.max_deliver);
   }
 
   private async processMessages(
     messages: ConsumerMessages,
     handleMessage: (message: JsMsg) => Promise<void>,
+    maxDeliveries?: number,
   ) {
     for await (const message of messages) {
       try {
@@ -56,9 +57,25 @@ export class BrokerStreamConsumerService implements OnModuleDestroy {
         this.logger.error(
           `Failed to process ${message.subject}: ${String(error)}`,
         );
-        message.nak(RETRY_DELAYS_IN_MS[message.info.deliveryCount - 1]);
+        this.retryOrGiveUp(message, maxDeliveries);
       }
     }
+  }
+
+  private retryOrGiveUp(message: JsMsg, maxDeliveries?: number) {
+    const { deliveryCount } = message.info;
+    const isLastDelivery =
+      maxDeliveries !== undefined && deliveryCount >= maxDeliveries;
+
+    if (isLastDelivery) {
+      this.logger.error(
+        `Giving up on ${message.subject} after ${deliveryCount} deliveries`,
+      );
+      message.term();
+      return;
+    }
+
+    message.nak(RETRY_DELAYS_IN_MS[deliveryCount - 1]);
   }
 
   async onModuleDestroy() {
